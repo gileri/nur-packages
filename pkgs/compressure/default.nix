@@ -1,8 +1,10 @@
 {
   stdenv,
   autoreconfHook,
+  copyDesktopItems,
   fetchFromGitHub,
   lib,
+  makeDesktopItem,
   makeWrapper,
   nix-update-script,
   pkg-config,
@@ -36,8 +38,20 @@ stdenv.mkDerivation rec {
     "--disable-steam"
   ];
 
+  desktopItems = [
+    (makeDesktopItem {
+      name = pname;
+      desktopName = "ComPressure";
+      comment = meta.description;
+      exec = "ComPressure";
+      icon = "compressure";
+      categories = [ "Game" ];
+    })
+  ];
+
   nativeBuildInputs = [
     autoreconfHook
+    copyDesktopItems
     pkg-config
     makeWrapper
   ];
@@ -54,8 +68,10 @@ stdenv.mkDerivation rec {
   ];
 
   postInstall = ''
-    install -m644 -D -t $out/usr/share/compressure/ *.json *.png *.ttf *.ogg
-    wrapProgram $out/bin/ComPressure --chdir "$out/usr/share/compressure"
+    install -m644 -D -t $out/share/compressure/ *.json *.png *.ttf *.ogg
+    mkdir -p $out/share/icons/hicolor/256x256/apps
+    ln -s $out/share/compressure/icon.png $out/share/icons/hicolor/256x256/apps/compressure.png
+    wrapProgram $out/bin/ComPressure --chdir $out/share/compressure
   '';
 
   passthru.updateScript = nix-update-script { };
